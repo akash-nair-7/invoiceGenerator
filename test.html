@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Invoice Generator</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            padding: 20px;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .container {
+            background: #fff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+
+        .form-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 15px;
+        }
+
+        .form-group {
+            flex: 1;
+        }
+
+        .details-box {
+            border: 1px solid #ddd;
+            padding: 20px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+
+        .details-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 15px;
+        }
+
+        .details-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 8px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+
+        button {
+            background: #007bff;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+        }
+
+        button:hover {
+            background: #0056b3;
+        }
+
+        #invoice {
+            display: none;
+        }
+
+        .invoice-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 30px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+        }
+
+        th, td {
+            border: 1px solid #ddd;
+            padding: 12px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #f8f9fa;
+        }
+
+        .bank-details {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+
+        .signature {
+            text-align: right;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+        }
+
+        .editable {
+    display: inline-block;
+    padding: 8px 12px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 1.5em;
+    font-family: inherit;
+    cursor: text;
+}
+
+.editable:focus {
+    outline: none;
+    border-color: #007bff; /* Blue border on focus */
+    background-color: #f9f9f9;
+}
+
+@media print {
+            body {
+                width: 210mm; /* A4 width */
+                height: 297mm; /* A4 height */
+                margin: 0;
+                padding: 20mm; /* Space for margins */
+            }
+
+            #invoice {
+                display: block; /* Ensure the invoice is displayed */
+            }
+
+            #downButton,#editButton {
+                display: none; /* Hide buttons when printing */
+            }
+        }
+        
+    </style>
+</head>
+<body>
+    <div class="container">
+        <form id="invoiceForm">
+            <h1 contenteditable="true" class="editable" id="invoiceHeader">Invoice Generator</h1>
+
+            
+            <div class="form-header">
+                <div class="form-group">
+                    <label for="invoiceNo">Invoice No:</label>
+                    <input type="text" id="invoiceNo" required>
+                </div>
+                <div class="form-group">
+                    <label for="date">Date:</label>
+                    <input type="date" id="date" required>
+                </div>
+            </div>
+
+            <div class="details-box">
+                <div class="details-content">
+                    <div class="client-details">
+                        <h3>Client Details</h3>
+                        <label for="clientName">Client Name:</label>
+                        <input type="text" id="clientName" required>
+                        
+                        <label for="clientAddress">Client Address:</label>
+                        <input type="text" id="clientAddress" required>
+                        
+                        <label for="clientContact">Contact No:</label>
+                        <input type="text" id="clientContact" required>
+                        
+                        <label for="poNo">PO No:</label>
+                        <input type="text" id="poNo" required>
+                    </div>
+
+                    <div class="company-details">
+                        <h3>Company Details</h3>
+                        <label for="companyName">Company Name:</label>
+                        <input type="text" id="companyName" required>
+                        
+                        <label for="companyAddress">Company Address:</label>
+                        <input type="text" id="companyAddress" required>
+                        
+                        <label for="trainerName">Trainer Name:</label>
+                        <input type="text" id="trainerName" required>
+
+                        <label for="trainerContact">Trainer No:</label>
+                        <input type="text" id="trainerContact" required>
+                        
+                    </div>
+                </div>
+            </div>
+
+            <div class="details-box">
+                <h3>Service Details</h3>
+                <div id="serviceDetailsContainer"></div>
+                <button type="button" onclick="addServiceDetail()" style="margin-top:10px;">Add More Service</button>
+            </div>
+
+            <div class="details-box">
+                <h3>Bank Details</h3>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="bankName">Bank Name:</label>
+                        <input type="text" id="bankName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="accountNo">Account No:</label>
+                        <input type="text" id="accountNo" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="ifscCode">IFSC Code:</label>
+                        <input type="text" id="ifscCode" required>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="accoundHolderName">Acc Holder Name:</label>
+                        <input type="text" id="accoundHolderName" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="panNo">PAN No:</label>
+                        <input type="text" id="panNo" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="bankAddress">Bank addr. :</label>
+                        <input type="text" id="bankAddress" required>
+                    </div>
+                </div>
+            </div>
+
+            <button type="submit">Generate Invoice</button>
+        </form>
+
+        <div id="invoice">
+            <div class="invoice-header">
+                <h2 id="displayInvoiceHeading"></h2>
+                <div>
+                    <p><strong>Invoice No:</strong> <span id="displayInvoiceNo"></span></p>
+                    <p><strong>Date:</strong> <span id="displayDate"></span></p>
+                </div>
+            </div>
+
+            <div class="details-box">
+                <div class="details-content">
+                    <div>
+                        <h3>CLIENT</h3>
+                        <p id="displayClientName"></p>
+                        <p id="displayClientAddress"></p>
+                        <p><strong>Contact No:</strong> <span id="displayClientContact"></span></p>
+                        <p><strong>PO No:</strong> <span id="displayPoNo"></span></p>
+                    </div>
+                    <div>
+                        <h3>COMPANY</h3>
+                        <p id="displayCompanyName"></p>
+                        <p id="displayCompanyAddress"></p>
+                        <p><strong>Trainer Name:</strong> <span id="displayTrainerName"></span></p>
+                        <p id="displayTrainerContact"></p>
+                    </div>
+                </div>
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Description</th>
+                        <th>Quantity</th>
+                        <th>Rate (INR)</th>
+                        <th>Amount (INR)</th>
+                    </tr>
+                </thead>
+                <tbody id="invoiceServiceTable"></tbody>
+            </table>
+
+            <div class="details-box">
+                <p><strong>Total Amount:</strong> ₹<span id="displayTotal"></span></p>
+                <p><strong>Amount in words:</strong> <span id="displayAmountInWords"></span></p>
+            </div>
+
+            <div class="bank-details">
+                <h3>Bank Details</h3>
+                <div class="form-row">
+                    <p><strong>Bank Name:</strong> <span id="displayBankName"></span></p>
+                    <p><strong>Account No:</strong> <span id="displayAccountNo"></span></p>
+                    <p><strong>IFSC Code:</strong> <span id="displayIfscCode"></span></p>
+                </div>
+                <div class="form-row">
+                    <p><strong>Acc Holder Name:</strong> <span id="displayAccHolderName"></span></p>
+                    <p><strong>PAN No:</strong> <span id="displayPANNo"></span></p>
+                    <p><strong>Bank Addr. :</strong> <span id="displayBankAddr"></span></p>
+                </div>
+            </div>
+
+            <div class="signature">
+                <p>(Signature)</p>
+                <p><strong><span id="displayTrainerName2"></span></strong></p>
+            </div>
+            <div class="button-container">
+                <button id="downButton" onclick="printInvoice()">Download Invoice</button>
+
+                <button id="editButton" onclick="editInvoice()">Edit Invoice</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        
+        function numberToWords(num) {
+            const ones = ['', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine'];
+            const tens = ['', '', 'twenty', 'thirty', 'forty', 'fifty', 'sixty', 'seventy', 'eighty', 'ninety'];
+            const teens = ['ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen'];
+            
+            if (num < 10) return ones[num];
+            if (num < 20) return teens[num - 10];
+            if (num < 100) return tens[Math.floor(num / 10)] + (num % 10 ? ' ' + ones[num % 10] : '');
+            if (num < 1000) return ones[Math.floor(num / 100)] + ' hundred' + (num % 100 ? ' and ' + numberToWords(num % 100) : '');
+            if (num < 100000) return numberToWords(Math.floor(num / 1000)) + ' thousand' + (num % 1000 ? ' ' + numberToWords(num % 1000) : '');
+            return numberToWords(Math.floor(num / 100000)) + ' lakh' + (num % 100000 ? ' ' + numberToWords(num % 100000) : '');
+        }
+
+        document.getElementById('invoiceForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    // Get form values
+    const invoiceHeader = document.getElementById('invoiceHeader').textContent;
+    const invoiceNo = document.getElementById('invoiceNo').value;
+    const date = document.getElementById('date').value;
+    const clientName = document.getElementById('clientName').value;
+    const clientAddress = document.getElementById('clientAddress').value;
+    const clientContact = document.getElementById('clientContact').value;
+    const poNo = document.getElementById('poNo').value;
+    const companyName = document.getElementById('companyName').value;
+    const companyAddress = document.getElementById('companyAddress').value;
+    const trainerName = document.getElementById('trainerName').value;
+    const trainerContact = document.getElementById('trainerContact').value;
+    const bankName = document.getElementById('bankName').value;
+    const accountNo = document.getElementById('accountNo').value;
+    const ifscCode = document.getElementById('ifscCode').value;
+    const accoundHolderName = document.getElementById('accoundHolderName').value;
+    const panNo = document.getElementById('panNo').value;
+    const bankAddress = document.getElementById('bankAddress').value;
+
+    // Display values on invoice
+    document.getElementById('displayInvoiceHeading').textContent = invoiceHeader;
+    document.getElementById('displayInvoiceNo').textContent = invoiceNo;
+    document.getElementById('displayDate').textContent = date;
+    document.getElementById('displayClientName').textContent = clientName;
+    document.getElementById('displayClientAddress').textContent = clientAddress;
+    document.getElementById('displayClientContact').textContent = clientContact;
+    document.getElementById('displayPoNo').textContent = poNo;
+    document.getElementById('displayCompanyName').textContent = companyName;
+    document.getElementById('displayCompanyAddress').textContent = companyAddress;
+    document.getElementById('displayTrainerName').textContent = trainerName;
+    document.getElementById('displayTrainerContact').textContent = trainerContact;
+    document.getElementById('displayBankName').textContent = bankName;
+    document.getElementById('displayAccountNo').textContent = accountNo;
+    document.getElementById('displayIfscCode').textContent = ifscCode;
+    document.getElementById('displayAccHolderName').textContent = accoundHolderName;
+    document.getElementById('displayPANNo').textContent = panNo;
+    document.getElementById('displayBankAddr').textContent = bankAddress;
+    document.getElementById('displayTrainerName2').textContent=trainerName;
+    // Hide form and show invoice
+    document.getElementById('invoiceForm').style.display = 'none';
+    document.getElementById('invoice').style.display = 'block';
+});
+
+
+
+
+
+
+        var serviceCount = 0;
+        var totalAmount = 0;
+
+        function addServiceDetail() {
+            const container = document.getElementById('serviceDetailsContainer');
+            const serviceRow = document.createElement('div');
+            serviceRow.className = 'form-row';
+            serviceRow.innerHTML = `
+                <div class="form-group">
+                    <label for="description${serviceCount}">Description:</label>
+                    <input type="text" id="description${serviceCount}" required>
+                </div>
+                <div class="form-group">
+                    <label for="quantity${serviceCount}">Quantity:</label>
+                    <input type="number" id="quantity${serviceCount}" required>
+                </div>
+                <div class="form-group">
+                    <label for="rate${serviceCount}">Rate (INR):</label>
+                    <input type="number" id="rate${serviceCount}" required>
+                </div>
+            `;
+            container.appendChild(serviceRow);
+            serviceCount++;
+        }
+
+        document.getElementById('invoiceForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+
+            // Clear the previous table
+            const tableBody = document.getElementById('invoiceServiceTable');
+            tableBody.innerHTML = '';
+
+            totalAmount = 0;
+            for (let i = 0; i < serviceCount; i++) {
+                const description = document.getElementById(`description${i}`).value;
+                const quantity = parseFloat(document.getElementById(`quantity${i}`).value);
+                const rate = parseFloat(document.getElementById(`rate${i}`).value);
+                const amount = quantity * rate;
+                totalAmount += amount;
+
+                // Insert the row into the table
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${description}</td>
+                    <td>${quantity}</td>
+                    <td>${rate.toFixed(2)}</td>
+                    <td>${amount.toFixed(2)}</td>
+                `;
+                tableBody.appendChild(row);
+            }
+
+            // Display total and amount in words
+            document.getElementById('displayTotal').textContent = totalAmount.toFixed(2);
+            document.getElementById('displayAmountInWords').textContent = numberToWords(totalAmount);
+
+            // Display the invoice section
+            document.getElementById('invoice').style.display = 'block';
+        });
+
+        function removeServiceDetail(button) {
+            const serviceDetailsContainer = document.getElementById("serviceDetailsContainer");
+            if (serviceDetailsContainer.childElementCount === 1) {
+                const inputs = serviceDetailsContainer.querySelectorAll("input, select");
+                inputs.forEach(input => input.value = "");
+            } else {
+                button.parentElement.remove();
+            }
+        }
+
+        function editInvoice() {
+            document.getElementById('invoiceForm').style.display = 'block';
+            document.getElementById('invoice').style.display = 'none';
+        }
+
+
+        function updateTrainerName() {
+    const trainerName = document.getElementById('trainerName').value;
+    document.getElementById('displayTrainerName2').textContent = trainerName;
+}
+function printInvoice() {
+            const invoice = document.getElementById('invoice');
+            invoice.style.display = 'block'; // Show invoice for printing
+            window.print(); // Open print dialog
+            invoice.style.display = 'none'; // Hide invoice again
+        }
+
+        document.getElementById('invoiceForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            document.getElementById('invoice').style.display = 'block';
+        });
+
+    </script>
+</body>
+</html>
