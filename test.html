@@ -291,6 +291,7 @@
                         <th>Description</th>
                         <th>Quantity</th>
                         <th>Rate (INR)</th>
+                        <th>Unit</th>
                         <th>Amount (INR)</th>
                     </tr>
                 </thead>
@@ -414,6 +415,13 @@
                     <label for="rate${serviceCount}">Rate (INR):</label>
                     <input type="number" id="rate${serviceCount}" required>
                 </div>
+                <div class="form-group">
+                    <label for="unit${serviceCount}">Unit:</label>
+                    <select id="unit${serviceCount}">
+                        <option value="hour">Hour</option>
+                        <option value="day">Day</option>
+                    </select>
+                </div>
             `;
             container.appendChild(serviceRow);
             serviceCount++;
@@ -431,6 +439,7 @@
                 const description = document.getElementById(`description${i}`).value;
                 const quantity = parseFloat(document.getElementById(`quantity${i}`).value);
                 const rate = parseFloat(document.getElementById(`rate${i}`).value);
+                const unitElem = document.getElementById(`unit${i}`).value;
                 const amount = quantity * rate;
                 totalAmount += amount;
 
@@ -440,6 +449,7 @@
                     <td>${description}</td>
                     <td>${quantity}</td>
                     <td>${rate.toFixed(2)}</td>
+                    <td>${unitElem}</td>
                     <td>${amount.toFixed(2)}</td>
                 `;
                 tableBody.appendChild(row);
